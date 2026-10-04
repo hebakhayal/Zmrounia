@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title> مونديال الزمرونية 2026</title>
+<title>توقّع النتيجة | مونديال الزمرونية 2026</title>
 <base target="_top">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +11,9 @@
 <style>
 :root{
   /* Layout: one narrow column under a night-sky masthead carrying the tournament lockup (or the poster's own
-     title art), then a navy-and-gold scoreboard you operate (home side on the right), the crowd's live split,
-     and the patrons strip, as on the tournament poster. One dark look, like the poster. */
+     title art) and the prize, then a navy-and-gold scoreboard you operate (home side on the right), the crowd's
+     live split with the list of who predicted what, and the patrons strip, as on the tournament poster.
+     One dark look, like the poster. */
   --night:#070D24;
   --navy:#0E1A45;
   --navy-hi:#17286A;
@@ -63,21 +64,33 @@ button,input{font:inherit;color:inherit}
 .l4 span+span{font-size:9.5px;color:var(--gold)}
 .motto{font-family:var(--script);font-size:21px;line-height:1.5;color:var(--gold)}
 
+/* ── the prize ── */
+.prize{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px 12px;margin:0;padding:10px 16px;border-radius:18px;
+  border:1px solid rgba(240,193,75,.6);background:linear-gradient(180deg,rgba(240,193,75,.2),rgba(240,193,75,.07));text-align:center}
+.prize svg{flex:none;width:30px;height:30px;color:var(--gold)}
+.prize-l{font-weight:600;font-size:16px;color:var(--cream)}
+.prize-v{min-width:0;padding-block:.04em;font-family:var(--display);font-size:clamp(30px,9.5vw,40px);line-height:1.25;overflow-wrap:anywhere}
+.prize-v.long{font-size:clamp(20px,6.2vw,26px);line-height:1.4}
+
 .intro{display:flex;flex-direction:column;gap:2px}
 .intro h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(28px,8.5vw,36px);line-height:1.3;text-wrap:balance}
 .kick{margin:0;min-height:1.6em;color:var(--mist);font-size:15px}
+.both{margin:6px 0 0;font-weight:600;font-size:15px;line-height:1.6;color:var(--gold)}
 
 /* ── the match switcher ── */
 .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:68px;padding:8px 10px;
   border-radius:16px;border:1px solid var(--line);background:var(--navy);color:var(--mist);cursor:pointer;text-align:center;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tab-k{font-size:12px;line-height:1.4;letter-spacing:.02em}
 .tab-t{font-family:var(--display);font-size:17px;line-height:1.3;color:var(--cream);overflow-wrap:anywhere;text-wrap:balance}
 .tab-s{font-size:12.5px;line-height:1.4}
 .tab[aria-selected="true"]{border-color:var(--gold);background:linear-gradient(180deg,var(--navy-hi),var(--navy));box-shadow:0 0 0 2px rgba(240,193,75,.3)}
 .tab[aria-selected="true"] .tab-t{color:var(--gold-hi)}
 .tab.picked .tab-s{color:var(--gold)}
 .tab:disabled{cursor:default;opacity:.7}
+.tabs.mini .tab{min-height:48px;padding:6px 10px;border-radius:12px}
+.tabs.mini .tab-t{font-size:15px}
 
 /* ── the scoreboard ── */
 .board{position:relative;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;border-radius:22px;
@@ -160,6 +173,9 @@ button,input{font:inherit;color:inherit}
   font-family:var(--display);font-size:18px;line-height:1.3;overflow-wrap:anywhere;touch-action:manipulation}
 .note{text-align:center;font-size:14.5px;color:var(--alert)}
 .note:empty{display:none}
+.flash{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:14px;border:1px solid rgba(240,193,75,.6);
+  background:rgba(240,193,75,.12);font-size:15px;line-height:1.6}
+.flash svg{flex:none;width:22px;height:22px;margin-top:1px;color:var(--gold)}
 
 .board[data-view="loading"] .name{min-width:5em;min-height:1.25em;border-radius:6px;background:rgba(247,241,222,.12)}
 .board[data-view="loading"] .flag{visibility:hidden}
@@ -176,14 +192,35 @@ button,input{font:inherit;color:inherit}
 .crowd p{margin:0}
 .crowd-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px}
 .crowd-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:27px;line-height:1.3}
-.crowd-of{font-weight:600;font-size:15px;color:var(--gold)}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mist)}
 .live i{width:9px;height:9px;border-radius:50%;background:var(--mist)}
 .live.on i{background:var(--alert);animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:var(--navy);border:1px solid var(--line)}
+.seg button{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;min-height:44px;padding:6px 10px;border:0;border-radius:10px;
+  background:transparent;color:var(--mist);cursor:pointer;font-weight:600;font-size:15px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.seg button[aria-selected="true"]{background:var(--gold);color:var(--ink)}
+.seg b{min-width:1.9em;padding:0 7px;border-radius:999px;background:rgba(168,178,214,.2);font-weight:600;font-size:13px;line-height:1.7;
+  font-variant-numeric:tabular-nums;text-align:center}
+.seg button[aria-selected="true"] b{background:rgba(27,20,3,.16)}
+.seg b:empty{display:none}
+
 .quiet{color:var(--mist);font-size:15px}
 .stats{display:flex;flex-direction:column;gap:16px}
+
+/* ── who predicted what ── */
+.people{display:flex;flex-direction:column;gap:10px}
+.plist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;border-radius:18px;background:var(--navy);border:1px solid var(--line);overflow:hidden}
+.person{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;align-content:center;column-gap:10px;min-height:54px;padding:8px 14px}
+.person+.person{border-top:1px solid var(--line)}
+.person .no{font-size:13px;color:var(--mist);font-variant-numeric:tabular-nums;text-align:center}
+.person .nm{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;min-width:0;font-weight:500;line-height:1.5}
+.person .nm span:first-child{min-width:0;overflow-wrap:anywhere}
+.person .sc{font-family:var(--display);font-size:24px;line-height:1.2;color:var(--gold)}
+.person small{grid-column:2 / -1;justify-self:end;min-width:0;font-size:12px;line-height:1.45;color:var(--mist);overflow-wrap:anywhere;text-align:end}
+.person.me{background:rgba(240,193,75,.13)}
+.all{align-self:center;min-height:44px;padding:6px 20px;border-radius:12px;border:2px solid var(--gold);background:transparent;color:var(--gold-hi);cursor:pointer}
 .count{display:flex;align-items:baseline;gap:8px;font-size:14px;color:var(--mist)}
 .count b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.2;color:var(--cream);font-variant-numeric:tabular-nums}
 
@@ -261,14 +298,29 @@ button,input{font:inherit;color:inherit}
     <p class="motto">كرة تجمعنا… والزمرونية توحدنا</p>
   </header>
 
+  <p class="prize" id="prize" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 5H4.5v2.5A3.5 3.5 0 0 0 8 11M17 5h2.5v2.5A3.5 3.5 0 0 1 16 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 3h10v6a5 5 0 0 1-10 0ZM11 13.5h2V18h-2z" fill="currentColor"/>
+      <rect x="7.5" y="18" width="9" height="3" rx="1" fill="currentColor"/>
+    </svg>
+    <span class="prize-l">الجائزة</span>
+    <b class="prize-v gilt" id="prizeText"></b>
+  </p>
+
   <div class="intro">
     <h1 id="title">توقّع نتيجة الماتش</h1>
     <p class="kick" id="kick"></p>
+    <p class="both" id="both" hidden></p>
   </div>
 
   <div class="tabs" id="tabs" role="tablist" aria-label="ماتشات اليوم" hidden></div>
 
   <section class="board" id="board" data-view="loading" aria-label="سجّل توقعك">
+    <p class="flash" id="flash" role="status" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5L19.5 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="flashText"></span>
+    </p>
     <p class="gate">
       <span id="gateText">جارٍ تحميل بيانات الماتش…</span>
       <span class="clock" id="clock" hidden><span id="clockDays"></span><bdi dir="ltr" id="clockTime"></bdi></span>
@@ -334,7 +386,12 @@ button,input{font:inherit;color:inherit}
       <span class="live" id="live"><i></i><span id="liveText">جارٍ التحميل</span></span>
     </div>
 
-    <p class="crowd-of" id="crowdOf" hidden></p>
+    <div class="tabs mini" id="crowdTabs" role="tablist" aria-label="توقعات أي ماتش" hidden></div>
+    <div class="seg" role="tablist" aria-label="طريقة العرض">
+      <button type="button" role="tab" id="segStats" aria-selected="true">الملخص</button>
+      <button type="button" role="tab" id="segPeople" aria-selected="false">المشاركون<b id="segCount" dir="ltr"></b></button>
+    </div>
+
     <p class="quiet" id="empty" hidden></p>
 
     <div class="stats" id="stats" hidden>
@@ -363,6 +420,13 @@ button,input{font:inherit;color:inherit}
         <ol class="rows" id="rows"></ol>
         <p class="foot" id="more" hidden>وهناك نتائج أخرى أقل تكرارًا.</p>
       </div>
+    </div>
+
+    <div class="people" id="people" hidden>
+      <p class="quiet" id="pWait" hidden>جارٍ تحميل أسماء المشاركين…</p>
+      <p class="cap" id="pCap" hidden></p>
+      <ol class="plist" id="plist" hidden></ol>
+      <button type="button" class="all" id="pAll" hidden></button>
     </div>
 
     <p class="foot" id="foot">يتحدّث العرض تلقائيًا كل بضع ثوانٍ. لكل مشارك توقع واحد.</p>
@@ -395,16 +459,19 @@ button,input{font:inherit;color:inherit}
   var GEO_SETTLE_MS = 5000;     // بعد أول قراءة ننتظر قليلًا قراءة أدق
   var GEO_MAX_MS = 20000;       // أقصى انتظار لتحديد الموقع
   var GEO_REUSE_MS = 180000;    // موقع قُبل به توقع يكفي لتوقع الماتش التالي خلال هذه المدة
+  var PEOPLE_FIRST = 40;        // عدد أسماء المشاركين المعروضة قبل «عرض الكل»
+  var ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع'];
 
   document.documentElement.lang = 'ar';
   document.documentElement.dir = 'rtl';
 
   var el = {};
-  ['page', 'posterBox', 'poster', 'lockup', 'title', 'kick', 'tabs', 'board', 'gateText', 'clock', 'clockDays', 'clockTime', 'homeName', 'awayName',
-    'homeDigit', 'awayDigit', 'homeMinus', 'homePlus', 'awayMinus', 'awayPlus', 'pk', 'pkQ', 'pkHome', 'pkAway', 'who', 'name', 'phone',
-    'terms', 'go', 'goText', 'goScore', 'pkSaved', 'done', 'next', 'closed', 'setup', 'fail', 'retry', 'note', 'live', 'liveText', 'crowdOf', 'empty',
-    'stats', 'total', 'split', 'pHome', 'pDraw', 'pAway', 'lHome', 'lAway', 'cMid', 'pkNote', 'topCap', 'topTag', 'topFixture',
-    'topPct', 'topCount', 'rest', 'restCap', 'rows', 'more', 'foot'
+  ['page', 'posterBox', 'poster', 'lockup', 'prize', 'prizeText', 'title', 'kick', 'both', 'tabs', 'board', 'flash', 'flashText', 'gateText', 'clock',
+    'clockDays', 'clockTime', 'homeName', 'awayName', 'homeDigit', 'awayDigit', 'homeMinus', 'homePlus', 'awayMinus', 'awayPlus', 'pk', 'pkQ',
+    'pkHome', 'pkAway', 'who', 'name', 'phone', 'terms', 'go', 'goText', 'goScore', 'pkSaved', 'done', 'next', 'closed', 'setup', 'fail', 'retry',
+    'note', 'live', 'liveText', 'crowdTabs', 'segStats', 'segPeople', 'segCount', 'empty', 'stats', 'total', 'split', 'pHome', 'pDraw', 'pAway',
+    'lHome', 'lAway', 'cMid', 'pkNote', 'topCap', 'topTag', 'topFixture', 'topPct', 'topCount', 'rest', 'restCap', 'rows', 'more', 'people',
+    'pWait', 'pCap', 'plist', 'pAll', 'foot'
   ].forEach(function (id) { el[id] = document.getElementById(id); });
 
 
@@ -510,7 +577,9 @@ button,input{font:inherit;color:inherit}
     return !!p && isGoal(p.h) && isGoal(p.a);
   }
   function pickOf(p) {
-    return { h: p.h, a: p.a, pk: (p.pk === 'h' || p.pk === 'a') ? p.pk : '' };
+    var out = { h: p.h, a: p.a, pk: (p.pk === 'h' || p.pk === 'a') ? p.pk : '' };
+    if (typeof p.n === 'number' && p.n > 0 && p.n === Math.floor(p.n)) out.n = p.n;     // ترتيبه في قائمة المشاركين
+    return out;
   }
   function cleanPicks(o) {
     var out = {};
@@ -547,6 +616,12 @@ button,input{font:inherit;color:inherit}
     busy: false,
     stage: '',                // locating | sending
     note: '',
+    flash: '',                // تأكيد يظهر أعلى اللوحة بعد تسجيل توقع والانتقال للماتش التالي
+    refused: {},              // ماتشات رُفض فيها الرقم المكتوب لأنه مسجَّل من قبل: لا نقترحها حتى يتغيّر الرقم
+    prize: '',
+    pane: 'stats',            // stats | people: ما يُعرض في قسم توقعات الجمهور
+    people: {},               // معرّف الماتش ← قائمة مشاركيه [الاسم، نتيجة الأول، نتيجة الثاني، الفائز بضربات الجزاء]
+    peopleAll: false,
     stale: false,
     offset: 0                 // فرق ساعة الخادم عن ساعة الجهاز
   };
@@ -584,6 +659,8 @@ button,input{font:inherit;color:inherit}
       };
     });
     if (r.mine) setMines(r.mine);
+    if (typeof r.prize === 'string') S.prize = r.prize;
+    if (r.people && Array.isArray(r.people.list)) S.people[String(r.people.match)] = r.people.list;
     var first = !S.cur;
     show(S.cur);
     if (first && (S.mine || S.status !== 'open')) {     // أول فتح للصفحة: نبدأ بماتش لم يُتوقَّع بعد
@@ -600,7 +677,7 @@ button,input{font:inherit;color:inherit}
   function nextToPredict() {
     for (var i = 0; i < S.list.length; i++) {
       var m = S.list[i];
-      if (m.id !== S.cur && m.status === 'open' && !S.mines[m.id] && !(m.kickoff && Date.now() + S.offset >= m.kickoff)) return m;
+      if (m.id !== S.cur && m.status === 'open' && !S.mines[m.id] && !S.refused[m.id] && !(m.kickoff && Date.now() + S.offset >= m.kickoff)) return m;
     }
     return null;
   }
@@ -608,6 +685,7 @@ button,input{font:inherit;color:inherit}
   function refresh() {
     var p = { action: 'state' }, verify = needVerify;
     if (verify) p.token = token;
+    if (S.pane === 'people' && S.cur) p.people = S.cur;     // أسماء مشاركي الماتش المعروض، فقط وقائمتهم مفتوحة
     return call(p).then(function (r) {
       if (!r || !r.ok || !r.matches || !r.matches.length) {
         if (r && r.message && window.console) console.warn(r.message);
@@ -618,7 +696,7 @@ button,input{font:inherit;color:inherit}
     });
   }
 
-  var timer = null, backoff = 1, inflight = false;
+  var timer = null, backoff = 1, inflight = false, again = false;
 
   function schedule() {
     clearTimeout(timer);
@@ -627,7 +705,7 @@ button,input{font:inherit;color:inherit}
   }
 
   function poll(force) {
-    if (inflight) return;
+    if (inflight) { if (force) again = true; return; }     // يُعاد الطلب فور انتهاء الطلب الجاري
     if (document.hidden && !force) { schedule(); return; }
     inflight = true;
     refresh().then(function () {
@@ -639,7 +717,7 @@ button,input{font:inherit;color:inherit}
     }).then(function () {
       inflight = false;
       render();
-      schedule();
+      if (again) { again = false; poll(true); } else schedule();
     });
   }
 
@@ -655,7 +733,7 @@ button,input{font:inherit;color:inherit}
   var ERR_MSG = {
     name: 'اكتب اسمك.',
     phone_invalid: 'اكتب رقم موبايل صحيح.',
-    phone_used: 'هذا الرقم مسجّل له توقع من قبل.',
+    phone_used: 'هذا الرقم مسجّل له توقع لهذا الماتش من قبل.',
     pk: 'اختر من يفوز بضربات الجزاء.',
     geo_missing: 'لم يصل موقعك. اسمح بتحديد الموقع ثم حاول مرة أخرى.'
   };
@@ -690,6 +768,7 @@ button,input{font:inherit;color:inherit}
 
     S.busy = true;
     S.note = '';
+    S.flash = '';
     S.stage = m.geo ? 'locating' : 'sending';
     render();
 
@@ -709,8 +788,16 @@ button,input{font:inherit;color:inherit}
           if (pos) lastPos = { pos: pos, at: Date.now() };
           if (!validPick(was)) { S.mines[id] = { h: h, a: a, pk: pk }; setMines(S.mines); }
           apply(r);
+          var nx = nextToPredict();
+          if (nx) {
+            // المشاركة في كل ماتشات اليوم: ننتقل مباشرة إلى الماتش الذي لم يُتوقَّع بعد
+            S.flash = 'تم تسجيل توقعك لماتش ' + m.home + ' × ' + m.away + '. الآن سجّل توقعك لماتش ' + nx.home + ' × ' + nx.away + '.';
+            show(nx.id);
+            S.peopleAll = false;
+          }
           finish('');
-          celebrate();
+          if (nx) toBoard(); else celebrate();
+          if (S.pane === 'people') poll(true);
         } else if (err === 'duplicate' && validPick(was)) {
           apply(r);
           finish(was.h === h && was.a === a ? '' : 'سبق تسجيل توقع لهذا الماتش من هذا الجهاز، وهو المعروض هنا.');
@@ -726,7 +813,10 @@ button,input{font:inherit;color:inherit}
           finish('أنت على بُعد نحو ' + fmtDist(r.distance) + ' من موقع الماتش، والتوقع متاح في حدود ' + r.radius + ' متر فقط.' +
             (pos && pos.acc > 60 ? ' دقة تحديد موقعك ضعيفة، شغّل GPS وحاول مرة أخرى.' : ''));
         } else {
-          finish(ERR_MSG[err] || 'لم يُسجَّل التوقع. حاول مرة أخرى.');
+          if (err === 'phone_used') S.refused[id] = true;
+          var other = err === 'phone_used' ? nextToPredict() : null;
+          finish((ERR_MSG[err] || 'لم يُسجَّل التوقع. حاول مرة أخرى.') +
+            (other ? ' يمكنك توقع ماتش ' + other.home + ' × ' + other.away + ' من أعلى الصفحة.' : ''));
         }
       }, function () {
         if (n < 1) setTimeout(function () { attempt(pos, n + 1); }, 1500);
@@ -748,6 +838,12 @@ button,input{font:inherit;color:inherit}
     el.board.classList.remove('pop');
     void el.board.offsetWidth;
     el.board.classList.add('pop');
+  }
+
+  /* يُظهر أول اللوحة: مفاتيح الماتشات ثم التأكيد ثم النتيجة */
+  function toBoard() {
+    var top = el.tabs.hidden ? el.board : el.tabs;
+    if (top.scrollIntoView) top.scrollIntoView({ block: 'start' });
   }
 
 
@@ -877,11 +973,16 @@ button,input{font:inherit;color:inherit}
       el.homePlus.setAttribute('aria-label', 'زيادة أهداف ' + m.home);
       el.awayMinus.setAttribute('aria-label', 'إنقاص أهداف ' + m.away);
       el.awayPlus.setAttribute('aria-label', 'زيادة أهداف ' + m.away);
-      el.terms.textContent = m.geo
-        ? 'التوقع متاح للموجودين في موقع الماتش، في حدود ' + m.radius + ' متر. نطلب إذن تحديد موقعك عند التسجيل ونحفظه مع اسمك ورقمك.'
-        : 'نحفظ اسمك ورقمك مع توقعك.';
+      el.terms.textContent = (m.geo
+        ? 'التوقع متاح للموجودين في موقع الماتش، في حدود ' + m.radius + ' متر، ونطلب إذن تحديد موقعك عند التسجيل. '
+        : '') + 'اسمك وتوقعك يظهران في قائمة المشاركين. ' + (m.geo
+        ? 'رقم موبايلك وموقعك يُحفظان لدى منظّمي البطولة فقط ولا يظهران في الصفحة.'
+        : 'رقم موبايلك يُحفظ لدى منظّمي البطولة فقط ولا يظهر في الصفحة.');
       if (/^https:\/\//.test(m.poster || '')) showPoster(m.poster, false);
     }
+
+    el.flash.hidden = !S.flash;
+    el.flashText.textContent = S.flash;
 
     var shown = S.mine || S.draft;
     setDigit(el.homeDigit, shown.h);
@@ -935,37 +1036,76 @@ button,input{font:inherit;color:inherit}
     if (clock) tickClock();
   }
 
-  /* مفاتيح الماتشات: تظهر لو في اليوم أكثر من ماتش، وعلى كل مفتاح حالة توقع هذا الجهاز */
+  /* مفتاح ماتش: الكامل أعلى الصفحة (ترتيبه واسمه وحالة توقع هذا الجهاز)، والمختصر في قسم توقعات الجمهور */
+  function tabButton(m, i, full) {
+    var b = document.createElement('button'), t = document.createElement('span'), x;
+    b.type = 'button';
+    b.className = 'tab';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('data-id', m.id);
+    if (full) {
+      x = document.createElement('span');
+      x.className = 'tab-k';
+      x.textContent = 'الماتش ' + (ORD[i] || (i + 1));
+      b.appendChild(x);
+    }
+    t.className = 'tab-t';
+    t.textContent = m.home + ' × ' + m.away;
+    b.appendChild(t);
+    if (full) {
+      x = document.createElement('span');
+      x.className = 'tab-s';
+      b.appendChild(x);
+    }
+    return b;
+  }
+
+  function isShut(m) {
+    return m.status === 'locked' || (m.status === 'open' && !!m.kickoff && Date.now() + S.offset >= m.kickoff);
+  }
+
+  /* سطر تحت العنوان: المشاركة في كل ماتشات اليوم، وما بقي منها على هذا الجهاز */
+  function renderBoth() {
+    var total = S.list.length, done = 0, left = [], text = '';
+    S.list.forEach(function (m) {
+      if (S.mines[m.id]) done++;
+      else if (m.status === 'open' && !isShut(m)) left.push(m.home + ' × ' + m.away);
+    });
+    var all = total === 2 ? 'الماتشين' : 'كل الماتشات';
+    if (total > 1) {
+      if (done === total) text = 'سجّلت توقعاتك في ' + all + '.';
+      else if (done > 0 && left.length) text = 'سجّلت ' + (done === 1 ? 'توقعك لماتش واحد' : 'توقعاتك لـ ' + done + ' ماتشات') + '، وباقي: ' + left.join('، ') + '.';
+      else if (done === 0 && left.length > 1) text = 'المشاركة متاحة في ' + all + ': سجّل توقعك لكل ماتش.';
+    }
+    el.both.hidden = !text;
+    el.both.textContent = text;
+  }
+
+  /* مفاتيح الماتشات: تظهر لو في اليوم أكثر من ماتش، أعلى الصفحة وفي قسم توقعات الجمهور */
   function renderTabs() {
     var many = S.list.length > 1;
     el.tabs.hidden = !many;
+    el.crowdTabs.hidden = !many;
     el.title.textContent = many ? 'توقّع نتائج ماتشات اليوم' : 'توقّع نتيجة الماتش';
+    renderBoth();
     if (!many) return;
     var sig = S.list.map(function (m) { return m.id; }).join('|');
     if (el.tabs.getAttribute('data-sig') !== sig) {
       el.tabs.setAttribute('data-sig', sig);
       el.tabs.textContent = '';
-      S.list.forEach(function (m) {
-        var b = document.createElement('button'), t = document.createElement('span'), s = document.createElement('span');
-        b.type = 'button';
-        b.className = 'tab';
-        b.setAttribute('role', 'tab');
-        b.setAttribute('data-id', m.id);
-        t.className = 'tab-t';
-        t.textContent = m.home + ' × ' + m.away;
-        s.className = 'tab-s';
-        b.appendChild(t);
-        b.appendChild(s);
-        el.tabs.appendChild(b);
+      el.crowdTabs.textContent = '';
+      S.list.forEach(function (m, i) {
+        el.tabs.appendChild(tabButton(m, i, true));
+        el.crowdTabs.appendChild(tabButton(m, i, false));
       });
     }
-    Array.prototype.forEach.call(el.tabs.children, function (b, i) {
-      var m = S.list[i], mine = !!S.mines[m.id];
-      var shut = m.status === 'locked' || (m.status === 'open' && m.kickoff && Date.now() + S.offset >= m.kickoff);
-      b.setAttribute('aria-selected', m.id === S.cur ? 'true' : 'false');
+    S.list.forEach(function (m, i) {
+      var b = el.tabs.children[i], c = el.crowdTabs.children[i], mine = !!S.mines[m.id], on = m.id === S.cur ? 'true' : 'false';
+      b.setAttribute('aria-selected', on);
+      c.setAttribute('aria-selected', on);
       b.classList.toggle('picked', mine);
-      b.disabled = S.busy;
-      b.lastChild.textContent = mine ? 'تم تسجيل توقعك' : (m.status === 'setup' ? 'غير مضبوط' : (shut ? 'أُغلق باب التوقعات' : 'لم تتوقع بعد'));
+      b.disabled = c.disabled = S.busy;
+      b.lastChild.textContent = mine ? 'تم تسجيل توقعك' : (m.status === 'setup' ? 'غير مضبوط' : (isShut(m) ? 'أُغلق باب التوقعات' : 'لم تتوقع بعد'));
     });
   }
 
@@ -1025,19 +1165,27 @@ button,input{font:inherit;color:inherit}
     else if (t && m) { live = 'مباشر'; on = true; }
     el.liveText.textContent = live;
     el.live.classList.toggle('on', on);
-    el.crowdOf.hidden = !(m && S.list.length > 1);
-    el.crowdOf.textContent = m ? m.home + ' × ' + m.away : '';
+
+    var names = S.pane === 'people';
+    el.segStats.setAttribute('aria-selected', names ? 'false' : 'true');
+    el.segPeople.setAttribute('aria-selected', names ? 'true' : 'false');
+    el.segCount.textContent = t && m && t.total ? t.total : '';
 
     if (!t || !m) {
       el.empty.hidden = true;
       el.stats.hidden = true;
+      el.people.hidden = true;
       return;
     }
     el.empty.hidden = t.total > 0;
-    el.stats.hidden = t.total === 0;
-    el.empty.textContent = locked ? 'لم تُسجَّل أي توقعات.' : 'لا توجد توقعات بعد. كن أول من يتوقّع النتيجة.';
-    el.foot.textContent = locked ? 'هذه الحصيلة النهائية للتوقعات.' : 'يتحدّث العرض تلقائيًا كل بضع ثوانٍ. لكل مشارك توقع واحد.';
+    el.stats.hidden = names || t.total === 0;
+    el.people.hidden = !names || t.total === 0;
+    el.empty.textContent = locked ? 'لم تُسجَّل أي توقعات.' : (names ? 'لم يشارك أحد بعد. كن أول المشاركين.' : 'لا توجد توقعات بعد. كن أول من يتوقّع النتيجة.');
+    el.foot.textContent = names ? 'يظهر هنا اسم كل مشارك وتوقعه فقط، بلا رقم الموبايل ولا الموقع.'
+      : (locked ? 'هذه الحصيلة النهائية للتوقعات.'
+        : 'يتحدّث العرض تلقائيًا كل بضع ثوانٍ. لكل مشارك توقع واحد' + (S.list.length > 1 ? ' في كل ماتش.' : '.'));
     if (t.total === 0) return;
+    if (names) { renderPeople(); return; }
 
     el.total.textContent = t.total;
 
@@ -1096,7 +1244,77 @@ button,input{font:inherit;color:inherit}
     renderRows(list, first[2], t.total);
   }
 
+  /* سطر في قائمة المشاركين: ترتيب التسجيل، الاسم، التوقع، ولمن توقّع التعادل الفائز بضربات الجزاء */
+  function personRow(no, e, m, me) {
+    var li = document.createElement('li'), k = document.createElement('span'), nm = document.createElement('span'), tx = document.createElement('span'),
+      sc = document.createElement('span'), x;
+    li.className = me ? 'person me' : 'person';
+    k.className = 'no';
+    k.dir = 'ltr';
+    k.textContent = no;
+    nm.className = 'nm';
+    tx.textContent = String(e[0] || '').trim() || 'بدون اسم';
+    nm.appendChild(tx);
+    if (me) {
+      x = document.createElement('span');
+      x.className = 'tag';
+      x.textContent = 'أنت';
+      nm.appendChild(x);
+    }
+    sc.className = 'sc';
+    scoreInto(sc, e[1], e[2]);
+    li.appendChild(k);
+    li.appendChild(nm);
+    li.appendChild(sc);
+    if (e[1] === e[2] && (e[3] === 'h' || e[3] === 'a')) {
+      x = document.createElement('small');          // سطر ثانٍ تحت النتيجة
+      x.textContent = 'بضربات الجزاء: ' + (e[3] === 'h' ? m.home : m.away);
+      li.appendChild(x);
+    }
+    return li;
+  }
+
+  var peopleShown = '';
+
+  /* قائمة مشاركي الماتش المعروض: الأحدث أولًا، وسطر صاحب هذا الجهاز مميَّز */
+  function renderPeople() {
+    var m = S.match, list = S.people[m.id], ready = Array.isArray(list);
+    el.pWait.hidden = ready;
+    el.pCap.hidden = el.plist.hidden = !ready;
+    if (!ready) {
+      el.pAll.hidden = true;
+      return;
+    }
+    function valid(e) { return Array.isArray(e) && isGoal(e[1]) && isGoal(e[2]); }
+    var n = list.length, limit = S.peopleAll ? n : Math.min(n, PEOPLE_FIRST), me = -1, i;
+    if (S.mine && S.mine.n >= 1 && S.mine.n <= n) {
+      i = S.mine.n - 1;
+      if (valid(list[i]) && list[i][1] === S.mine.h && list[i][2] === S.mine.a) me = i;
+    }
+    var key = [m.id, m.home, m.away, limit, me, JSON.stringify(list)].join('|');
+    if (key !== peopleShown) {
+      peopleShown = key;
+      var frag = document.createDocumentFragment();
+      if (me >= 0 && me < n - limit) frag.appendChild(personRow(me + 1, list[me], m, true));    // خارج الجزء المعروض: يُثبَّت أول القائمة
+      for (i = n - 1; i >= n - limit; i--) {
+        if (valid(list[i])) frag.appendChild(personRow(i + 1, list[i], m, i === me));
+      }
+      el.plist.textContent = '';
+      el.plist.appendChild(frag);
+    }
+    el.pCap.textContent = 'الأحدث تسجيلًا أولًا. في كل نتيجة، الرقم الأيمن لـ ' + m.home + '.';
+    el.pAll.hidden = limit >= n;
+    el.pAll.textContent = 'عرض كل المشاركين (' + n + ')';
+  }
+
+  function renderPrize() {
+    el.prize.hidden = !S.prize;
+    el.prizeText.textContent = S.prize;
+    el.prizeText.classList.toggle('long', S.prize.length > 16);      // نص طويل: بخط أصغر
+  }
+
   function render() {
+    renderPrize();
     renderTabs();
     renderBoard();
     renderCrowd();
@@ -1107,7 +1325,19 @@ button,input{font:inherit;color:inherit}
     if (S.busy || !id || id === S.cur) return;
     show(id);
     S.note = '';
+    S.flash = '';
+    S.peopleAll = false;
     render();
+    if (S.pane === 'people') poll(true);
+  }
+
+  /* يبدّل قسم توقعات الجمهور بين الملخص وقائمة المشاركين */
+  function setPane(name) {
+    if (S.pane === name) return;
+    S.pane = name;
+    S.peopleAll = false;
+    render();
+    if (name === 'people') poll(true);
   }
 
 
@@ -1138,11 +1368,22 @@ button,input{font:inherit;color:inherit}
   });
   el.next.addEventListener('click', function () {
     go(el.next.getAttribute('data-id'));
-    if (el.tabs.scrollIntoView) el.tabs.scrollIntoView({ block: 'start' });
+    toBoard();
+  });
+  el.crowdTabs.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.tab') : null;
+    if (b) go(b.getAttribute('data-id'));
+  });
+  el.segStats.addEventListener('click', function () { setPane('stats'); });
+  el.segPeople.addEventListener('click', function () { setPane('people'); });
+  el.pAll.addEventListener('click', function () {
+    S.peopleAll = true;
+    renderCrowd();
   });
   [el.name, el.phone].forEach(function (input) {
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
   });
+  el.phone.addEventListener('input', function () { S.refused = {}; });
   el.retry.addEventListener('click', function () {
     S.status = 'loading';
     backoff = 1;
