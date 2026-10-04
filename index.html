@@ -237,6 +237,9 @@ button,input{font:inherit;color:inherit}
 .rg svg{flex:none;width:15px;height:15px}
 .rg.in{color:var(--ok)}
 .rg.out{color:var(--alert)}
+.tm{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:1.45;color:var(--mist);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tm svg{flex:none;width:13px;height:13px}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .person.me{background:rgba(240,193,75,.13)}
 .all{align-self:center;min-height:44px;padding:6px 20px;border-radius:12px;border:2px solid var(--gold);background:transparent;color:var(--gold-hi);cursor:pointer}
 .count{display:flex;align-items:baseline;gap:8px;font-size:14px;color:var(--mist)}
@@ -294,6 +297,20 @@ button,input{font:inherit;color:inherit}
 .acard{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:var(--navy);border:1px solid var(--line)}
 .acard h2{margin:0;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.3;overflow-wrap:anywhere}
 .acard h3{margin:6px 0 0;font-weight:600;font-size:16px;line-height:1.5;color:var(--gold)}
+.ahead{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
+.ahead[data-act]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ahead-t{display:flex;flex-direction:column;gap:8px;min-width:0}
+.afold{display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid rgba(240,193,75,.7);background:transparent;color:var(--gold-hi);
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s}
+.afold:hover{background:rgba(240,193,75,.14)}
+.afold svg{width:20px;height:20px}
+.afold svg,.afrow svg{transition:transform .2s}
+.afold[aria-expanded="true"] svg,.afrow[aria-expanded="true"] svg{transform:rotate(180deg)}
+.brief .sc{font-family:var(--display);font-size:18px;line-height:1.2;color:var(--gold)}
+.afrow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);
+  background:rgba(7,13,36,.35);text-align:start;overflow-wrap:anywhere;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.afrow span{min-width:0}
+.afrow svg{flex:none;width:18px;height:18px}
 .aset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .aside{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
 .aname{font-weight:600;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
@@ -313,6 +330,9 @@ button,input{font:inherit;color:inherit}
 @media (max-width:400px){.aline{grid-template-columns:28px minmax(0,1fr)}.aline a{grid-column:2;justify-self:start}}
 .link{align-self:center;min-height:44px;padding:6px 14px;border:0;background:transparent;color:var(--mist);text-decoration:underline;cursor:pointer}
 .atools{display:flex;align-items:center;justify-content:center;gap:12px}
+.abtns{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.abtn{min-height:44px;padding:6px 20px;border-radius:12px;border:2px solid var(--gold);background:transparent;color:var(--gold-hi);cursor:pointer}
+.abtn:disabled{cursor:default;opacity:.6}
 .note.good{color:var(--gold)}
 
 /* ── the patrons strip ── */
@@ -696,6 +716,8 @@ button,input{font:inherit;color:inherit}
     note: '',
     flash: '',                // تأكيد يظهر أعلى اللوحة بعد تسجيل توقع والانتقال للماتش التالي
     refused: {},              // ماتشات رُفض فيها الرقم المكتوب لأنه مسجَّل من قبل: لا نقترحها حتى يتغيّر الرقم
+    farOk: false,             // نُبّه صاحب الجهاز أن موقعه خارج النطاق: ما يرسله بعدها يُسجَّل كما هو
+    farAt: '',                // الماتش الذي يظهر على لوحته هذا التنبيه الآن
     prize: '',
     pane: 'stats',            // stats | people: ما يُعرض في قسم توقعات الجمهور
     people: {},               // معرّف الماتش ← قائمة مشاركيه [الاسم، نتيجة الأول، نتيجة الثاني، الفائز بضربات الجزاء]
@@ -734,7 +756,8 @@ button,input{font:inherit;color:inherit}
         issue: x.status === 'setup' ? (r.setupIssue || 'kickoff') : '',
         tally: x.tally,
         result: x.result && isGoal(x.result.h) && isGoal(x.result.a) ? pickOf(x.result) : null,      // النتيجة النهائية، لو سجّلها المنظّمون
-        geo: !!r.geo, ranged: 'ranged' in r ? !!r.ranged : !!r.geo, radius: r.radius, tiebreak: !!r.tiebreak, poster: r.poster || ''
+        geo: !!r.geo, ranged: 'ranged' in r ? !!r.ranged : !!r.geo, strict: 'strict' in r ? !!r.strict : ('ranged' in r ? !!r.ranged : !!r.geo),
+        radius: r.radius, tiebreak: !!r.tiebreak, poster: r.poster || ''
       };
     });
     if (r.mine) setMines(r.mine);
@@ -865,12 +888,13 @@ button,input{font:inherit;color:inherit}
       render();
     }
     function attempt(pos, n) {
-      var p = { action: 'submit', match: id, h: h, a: a, pk: pk, name: name, phone: phone, token: token };
+      var p = { action: 'submit', match: id, h: h, a: a, pk: pk, name: name, phone: phone, token: token, far: S.farOk ? 1 : 0 };
       if (pos) { p.lat = pos.lat; p.lng = pos.lng; p.acc = Math.round(pos.acc); }
       call(p).then(function (r) {
         var err = r && r.error, was = r && r.mine && r.mine[id];
-        if (err === 'far' || err === 'geo_missing') lastPos = null;
+        if (err === 'far' || err === 'far_ok' || err === 'geo_missing') lastPos = null;
         if (r && r.ok && r.saved) {
+          S.farAt = '';
           if (pos) lastPos = { pos: pos, at: Date.now() };
           if (!validPick(was)) { S.mines[id] = { h: h, a: a, pk: pk }; setMines(S.mines); }
           apply(r);
@@ -898,6 +922,11 @@ button,input{font:inherit;color:inherit}
         } else if (err === 'far') {
           finish('أنت على بُعد نحو ' + fmtDist(r.distance) + ' من موقع الماتش، والتوقع متاح في حدود ' + r.radius + ' متر فقط.' +
             (pos && pos.acc > 60 ? ' دقة تحديد موقعك ضعيفة، شغّل GPS وحاول مرة أخرى.' : ''));
+        } else if (err === 'far_ok') {
+          // التوقع مقبول من أي مكان، لكن صاحبه يُنبَّه مرة قبل أن يُسجَّل خارج النطاق: قد يكون في الملعب وموقعه غير دقيق
+          S.farOk = true;
+          S.farAt = id;
+          finish('أنت على بُعد نحو ' + fmtDist(r.distance) + ' من موقع الماتش، فسيظهر توقعك «' + outLabel(r.radius) + '». لو كنت في موقع الماتش شغّل GPS وحاول مرة أخرى، وإلا فاضغط الزر مرة أخرى لتسجيل توقعك.');
         } else {
           if (err === 'phone_used') S.refused[id] = true;
           var other = err === 'phone_used' ? nextToPredict() : null;
@@ -1002,6 +1031,53 @@ button,input{font:inherit;color:inherit}
     box.className = inside ? 'rg in' : 'rg out';
     tx.textContent = label;
     box.appendChild(discIcon(inside));
+    box.appendChild(tx);
+    return box;
+  }
+  /* أيقونة مرسومة بخط: ساعة صغيرة قبل وقت التسجيل (ring)، وسهم فتح البطاقات وإغلاقها */
+  function lineIcon(d, ring) {
+    var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path'), c;
+    svg.setAttribute('viewBox', '0 0 16 16');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.6');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    if (ring) {
+      c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', '8'); c.setAttribute('cy', '8'); c.setAttribute('r', '6.6');
+      svg.appendChild(c);
+    }
+    path.setAttribute('d', d);
+    svg.appendChild(path);
+    return svg;
+  }
+  /* وقت تسجيل توقع كما يُكتب بجانبه: الساعة والدقيقة، وقبلهما اليوم والشهر لو سُجّل في يوم غير today. فارغ لو الوقت غير معروف */
+  var clockFmt = null, dayFmt = null;
+  function fmtWhen(ms, today) {
+    if (typeof ms !== 'number' || !(ms > 0)) return '';
+    var d = new Date(ms);
+    if (isNaN(d.getTime())) return '';
+    try {
+      if (!clockFmt) {
+        clockFmt = new Intl.DateTimeFormat('ar-u-ca-gregory-nu-latn', { hour: 'numeric', minute: '2-digit' });
+        dayFmt = new Intl.DateTimeFormat('ar-u-ca-gregory-nu-latn', { day: 'numeric', month: 'long' });
+      }
+      return (d.toDateString() === today ? '' : dayFmt.format(d) + '، ') + clockFmt.format(d);
+    } catch (e) {
+      return d.toLocaleString();
+    }
+  }
+  /* وقت تسجيل التوقع بجانبه: ساعة صغيرة ثم الوقت */
+  function timeMark(text) {
+    var box = document.createElement('span'), label = document.createElement('span'), tx = document.createElement('span');
+    box.className = 'tm';
+    label.className = 'vh';
+    label.textContent = 'وقت التسجيل ';
+    tx.textContent = text;
+    box.appendChild(lineIcon('M8 4.5V8l2.4 1.6', true));
+    box.appendChild(label);
     box.appendChild(tx);
     return box;
   }
@@ -1125,9 +1201,9 @@ button,input{font:inherit;color:inherit}
       el.homePlus.setAttribute('aria-label', 'زيادة أهداف ' + m.home);
       el.awayMinus.setAttribute('aria-label', 'إنقاص أهداف ' + m.away);
       el.awayPlus.setAttribute('aria-label', 'زيادة أهداف ' + m.away);
-      el.terms.textContent = (!m.geo ? '' : (m.ranged
+      el.terms.textContent = (!m.geo ? '' : (m.strict
         ? 'التوقع متاح للموجودين في موقع الماتش، في حدود ' + m.radius + ' متر، ونطلب إذن تحديد موقعك عند التسجيل. '
-        : 'نطلب إذن تحديد موقعك عند التسجيل. ')) +
+        : (m.ranged ? 'التوقع متاح من أي مكان، ونطلب إذن تحديد موقعك عند التسجيل لنعرف هل أنت في موقع الماتش، في حدود ' + m.radius + ' متر. ' : 'نطلب إذن تحديد موقعك عند التسجيل. '))) +
         (m.ranged ? 'اسمك وتوقعك يظهران في قائمة المشاركين، ومعهما علامة تبيّن هل سُجّل التوقع من داخل النطاق. ' : 'اسمك وتوقعك يظهران في قائمة المشاركين. ') +
         (m.geo ? 'رقم موبايلك وموقعك نفسه يُحفظان لدى منظّمي البطولة فقط ولا يظهران في الصفحة.'
           : 'رقم موبايلك يُحفظ لدى منظّمي البطولة فقط ولا يظهر في الصفحة.');
@@ -1158,7 +1234,7 @@ button,input{font:inherit;color:inherit}
 
     el.go.hidden = !open;
     el.go.disabled = S.busy;
-    el.goText.textContent = !S.busy ? 'سجّل توقعي' : (S.stage === 'locating' ? 'جارٍ تحديد موقعك…' : 'جارٍ التسجيل…');
+    el.goText.textContent = !S.busy ? (S.farAt && S.farAt === S.cur ? 'سجّل توقعي على أي حال' : 'سجّل توقعي') : (S.stage === 'locating' ? 'جارٍ تحديد موقعك…' : 'جارٍ التسجيل…');
     scoreInto(el.goScore, S.draft.h, S.draft.a);
 
     var won = (v === 'saved' && m && S.mine.h === S.mine.a && S.mine.pk) ? (S.mine.pk === 'h' ? m.home : m.away) : '';
@@ -1362,8 +1438,8 @@ button,input{font:inherit;color:inherit}
     el.stats.hidden = names || t.total === 0;
     el.people.hidden = !names || t.total === 0;
     el.empty.textContent = locked ? 'لم تُسجَّل أي توقعات.' : (names ? 'لم يشارك أحد بعد. كن أول المشاركين.' : 'لا توجد توقعات بعد. كن أول من يتوقّع النتيجة.');
-    el.foot.textContent = names ? (S.match && S.match.ranged ? 'يظهر هنا اسم كل مشارك وتوقعه، وهل سُجّل التوقع من داخل نطاق الماتش، بلا رقم الموبايل ولا الموقع نفسه.'
-        : 'يظهر هنا اسم كل مشارك وتوقعه فقط، بلا رقم الموبايل ولا الموقع.')
+    el.foot.textContent = names ? (S.match && S.match.ranged ? 'يظهر هنا اسم كل مشارك وتوقعه ووقت تسجيله، وهل سُجّل من داخل نطاق الماتش، بلا رقم الموبايل ولا الموقع نفسه.'
+        : 'يظهر هنا اسم كل مشارك وتوقعه ووقت تسجيله فقط، بلا رقم الموبايل ولا الموقع.')
       : (locked ? 'هذه الحصيلة النهائية للتوقعات.'
         : 'يتحدّث العرض تلقائيًا كل بضع ثوانٍ. لكل مشارك توقع واحد' + (S.list.length > 1 ? ' في كل ماتش.' : '.'));
     if (t.total === 0) return;
@@ -1423,8 +1499,8 @@ button,input{font:inherit;color:inherit}
     renderRows(list, first[2], t.total);
   }
 
-  /* سطر في قائمة المشاركين: ترتيب التسجيل، الاسم، التوقع، ولمن توقّع التعادل الفائز بضربات الجزاء */
-  function personRow(no, e, m, me, right) {
+  /* سطر في قائمة المشاركين: ترتيب التسجيل، الاسم، التوقع، وقت تسجيله، ولمن توقّع التعادل الفائز بضربات الجزاء */
+  function personRow(no, e, m, me, right, today) {
     var li = document.createElement('li'), k = document.createElement('span'), nm = document.createElement('span'), tx = document.createElement('span'),
       sc = document.createElement('span'), x;
     li.className = me ? 'person me' : 'person';
@@ -1451,9 +1527,11 @@ button,input{font:inherit;color:inherit}
     li.appendChild(k);
     li.appendChild(nm);
     li.appendChild(sc);
-    var sub = document.createElement('span');       // سطر ثانٍ: علامة النطاق تحت الاسم، والفائز بضربات الجزاء تحت النتيجة
+    var sub = document.createElement('span');       // سطر ثانٍ: علامة النطاق ووقت التسجيل تحت الاسم، والفائز بضربات الجزاء تحت النتيجة
     sub.className = 'sub';
     if (m.ranged) sub.appendChild(rangeMark(!e[4], e[4] ? outLabel(m.radius) : inLabel(m.radius)));
+    x = fmtWhen(e[5], today);
+    if (x) sub.appendChild(timeMark(x));
     if (e[1] === e[2] && (e[3] === 'h' || e[3] === 'a')) {
       x = document.createElement('small');
       x.textContent = 'بضربات الجزاء: ' + (e[3] === 'h' ? m.home : m.away);
@@ -1486,13 +1564,14 @@ button,input{font:inherit;color:inherit}
       else rest.unshift(i);                                                          // الأحدث أولًا
     }
     var limit = S.peopleAll ? rest.length : Math.min(rest.length, PEOPLE_FIRST);
-    var key = [m.id, m.home, m.away, limit, me, res ? res.h + '-' + res.a + res.pk : '', m.ranged ? m.radius : '', JSON.stringify(list)].join('|');
+    var today = new Date(Date.now() + S.offset).toDateString();       // توقع سُجّل في يوم آخر يُكتب معه يومه
+    var key = [m.id, m.home, m.away, limit, me, res ? res.h + '-' + res.a + res.pk : '', m.ranged ? m.radius : '', today, JSON.stringify(list)].join('|');
     if (key !== peopleShown) {
       peopleShown = key;
       var frag = document.createDocumentFragment();
-      won.forEach(function (w) { frag.appendChild(personRow(w + 1, list[w], m, w === me, true)); });
-      if (me >= 0 && rest.indexOf(me) >= limit) frag.appendChild(personRow(me + 1, list[me], m, true, false));    // خارج الجزء المعروض: يُثبَّت قبل الباقين
-      rest.slice(0, limit).forEach(function (o) { frag.appendChild(personRow(o + 1, list[o], m, o === me, false)); });
+      won.forEach(function (w) { frag.appendChild(personRow(w + 1, list[w], m, w === me, true, today)); });
+      if (me >= 0 && rest.indexOf(me) >= limit) frag.appendChild(personRow(me + 1, list[me], m, true, false, today));    // خارج الجزء المعروض: يُثبَّت قبل الباقين
+      rest.slice(0, limit).forEach(function (o) { frag.appendChild(personRow(o + 1, list[o], m, o === me, false, today)); });
       el.plist.textContent = '';
       el.plist.appendChild(frag);
     }
@@ -1520,6 +1599,7 @@ button,input{font:inherit;color:inherit}
     if (S.busy || !id || id === S.cur) return;
     show(id);
     S.note = '';
+    S.farAt = '';
     S.flash = '';
     S.peopleAll = false;
     render();
@@ -1553,8 +1633,11 @@ button,input{font:inherit;color:inherit}
     data: null,               // آخر ما وصل من الشيت
     drafts: {},               // معرّف الماتش ← النتيجة التي يكتبها المنظّم
     tries: {},                // معرّف الماتش ← نتيجة يكتبها المنظّم ليجرّب اللوحة قبل الماتش
-    trial: null,              // التجربة المعروضة الآن: { match, h, a, pk }. لا تُحفظ في الشيت
+    trials: {},               // معرّف الماتش ← تجربته المعروضة الآن: { match, h, a, pk }. لا تُحفظ في الشيت
+    roster: false,            // تُطلب مع كل ردّ قوائم كل المشاركين ببياناتهم
+    showPeople: false,        // قوائم كل المشاركين معروضة
     open: {},                 // معرّف الماتش ← قائمة «توقعوا الفائز» مفتوحة
+    fold: {},                 // 'm:' + معرّف الماتش ← بطاقته مفتوحة، و 'p:' + معرّفه ← قائمة مشاركيه مفتوحة. ما لم يُضغط يبدأ مغلقًا
     busy: false,
     trying: false,            // الطلب الجاري تجربة نتيجة
     note: '', at: '', good: false,
@@ -1586,18 +1669,42 @@ button,input{font:inherit;color:inherit}
     A.at = at;
     A.good = good;
     A.note = text;
+    if (text && at && at !== '#people') A.fold['m:' + at] = true;       // ملاحظة على بطاقة ماتش: تُفتح البطاقة لتظهر
+  }
+
+  /* بطاقة ماتش ('m:' + معرّفه) أو قائمة مشاركيه ('p:' + معرّفه) مفتوحة؟ مع أكثر من ماتش تبدأ كلها مغلقة */
+  function adminWide(key) {
+    return A.fold[key] != null ? !!A.fold[key] : A.data.matches.length < 2;
+  }
+  function adminFold(key, id) {
+    var wide = !adminWide(key);
+    A.fold[key] = wide;
+    if (!wide && key.charAt(0) === 'm') {              // بطاقة تُغلق: لا تبقى فيها ملاحظة، ولا «مسح» ينتظر تأكيدًا
+      if (A.at === id) adminNote('', false, '');
+      if (A.armed === id) A.armed = '';
+    }
+    adminRender();
+  }
+
+  /* التجارب المعروضة التي ما زال باب توقعات ماتشها مفتوحًا، عدا تجربة الماتش except */
+  function adminTrials(except) {
+    return Object.keys(A.trials).filter(function (id) {
+      var m = adminMatch(id);
+      return id !== except && !!m && !m.result && !isShut(m);
+    }).map(function (id) { return A.trials[id]; });
   }
 
   /* طلب من الشيت برمز المنظّمين. done(err) تُنادى قبل إعادة الرسم */
-  function adminAsk(extra, done) {
+  function adminAsk(extra, done, trying) {
     if (A.busy) return;
     var p = { action: 'admin', code: A.code }, k;
     for (k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) p[k] = extra[k];
-    if (A.trial && p.action === 'admin' && !p.trial) {          // «تحديث» يبقي التجربة المعروضة ما دام باب توقعات ماتشها مفتوحًا
-      var tm = adminMatch(A.trial.match);
-      if (tm && !tm.result && !isShut(tm)) p.trial = A.trial;
+    if (!p.trials) {                                  // «تحديث» وحفظ نتيجة ماتش يبقيان تجارب الماتشات الأخرى معروضة
+      var keep = adminTrials('');
+      if (keep.length) p.trials = keep;
     }
-    A.trying = !!extra.trial;
+    if (A.roster) p.roster = 1;
+    A.trying = !!trying;
     A.busy = true;
     adminRender();
     call(p).then(function (r) {
@@ -1605,7 +1712,7 @@ button,input{font:inherit;color:inherit}
       if (r && r.ok && r.admin && r.matches) {
         A.data = r;
         if (typeof r.now === 'number') S.offset = r.now - Date.now();
-        if (A.trial && !(adminMatch(A.trial.match) || {}).trial) A.trial = null;      // لم تعد معروضة
+        Object.keys(A.trials).forEach(function (id) { if (!(adminMatch(id) || {}).trial) delete A.trials[id]; });      // لم تعد معروضة
         done('');
       } else {
         var err = (r && r.error) || 'server';
@@ -1643,8 +1750,10 @@ button,input{font:inherit;color:inherit}
         el.aCode.value = '';
         A.drafts = {};
         A.tries = {};
-        A.trial = null;
+        A.trials = {};
+        A.showPeople = false;
         A.open = {};
+        A.fold = {};
       }
     });
   }
@@ -1683,21 +1792,21 @@ button,input{font:inherit;color:inherit}
       return;
     }
     var t = { match: id, h: d.h, a: d.a, pk: d.h === d.a ? d.pk : '' };
-    adminAsk({ trial: t }, function (err) {
+    adminAsk({ trials: adminTrials(id).concat([t]) }, function (err) {       // مع تجارب الماتشات الأخرى المعروضة
       if (!err) {
-        A.trial = (adminMatch(id) || {}).trial ? t : null;
+        if ((adminMatch(id) || {}).trial) A.trials[id] = t;
         A.open[id] = false;
         adminNote('', false, '');
       } else if (A.code) {
         adminNote(id, false, ADMIN_MSG[err] || 'تعذّر الاتصال. حاول مرة أخرى.');
       }
-    });
+    }, true);
   }
 
   function adminUntry(id) {
-    A.trial = null;
+    delete A.trials[id];
     A.open[id] = false;
-    adminAsk({}, function (err) {
+    adminAsk({ trials: adminTrials(id) }, function (err) {
       if (err && A.code) adminNote(id, false, ADMIN_MSG[err] || 'تعذّر الاتصال. حاول مرة أخرى.');
     });
   }
@@ -1720,7 +1829,7 @@ button,input{font:inherit;color:inherit}
   }
 
   /* قائمة مشاركين للمنظّمين: ترتيب التسجيل، الاسم، وقت التسجيل (وتوقعه لو طُلب)، وما يخص شرط الموقع وتكرار الاسم، ورقم الموبايل للاتصال */
-  function adminList(list, withPick) {
+  function adminList(list, withPick, m) {
     var ol = node('ol', 'alist');
     list.forEach(function (e) {
       var li = node('li', 'aline'), who = node('span', 'aw'), small = node('small'), phone = String(e[2] == null ? '' : e[2]).replace(/[^0-9+]/g, ''),
@@ -1732,6 +1841,7 @@ button,input{font:inherit;color:inherit}
         scoreInto(sc, e[4], e[5]);
         small.appendChild(node('span', '', 'توقّع'));
         small.appendChild(sc);
+        if (m && e[4] === e[5] && (e[6] === 'h' || e[6] === 'a')) small.appendChild(node('span', '', '(بضربات الجزاء: ' + (e[6] === 'h' ? m.home : m.away) + ')'));
       }
       if (e[3]) small.appendChild(node('span', '', 'سجّل ' + fmtClock(e[3])));
       if (A.data.ranged) {
@@ -1793,7 +1903,7 @@ button,input{font:inherit;color:inherit}
   /* قبل انتهاء وقت التوقع: تجربة اللوحة على أي نتيجة. التجربة لا تُحفظ ولا تظهر للجمهور */
   function adminTrial(card, m) {
     var d = A.tries[m.id] || (A.tries[m.id] = { h: 0, a: 0, pk: '' });
-    var t = A.trial && A.trial.match === m.id && m.trial && m.exact && m.close ? m.trial : null;
+    var t = A.trials[m.id] && m.trial && m.exact && m.close ? m.trial : null;
     card.appendChild(node('h3', '', 'تجربة اللوحة قبل الماتش'));
     card.appendChild(node('p', 'quiet', 'اختر أي نتيجة لترى اللوحة كما ستظهر بعد الماتش. التجربة لا تُحفظ ولا تظهر للجمهور.'));
     adminSetter(card, m, d, 'trial');
@@ -1821,14 +1931,46 @@ button,input{font:inherit;color:inherit}
     card.appendChild(end);
   }
 
+  /* في رأس بطاقة مغلقة: النتيجة المسجَّلة أو المجرَّبة وعدد من أصابوها، أو أن النتيجة لم تُسجَّل بعد */
+  function adminBrief(box, m, shut, res) {
+    var r = res || (A.trials[m.id] && m.trial && m.exact && m.close ? m.trial : null), p, sc;
+    if (!r) {
+      if (shut) box.appendChild(node('p', 'cap', 'انتهى وقت التوقع، ولم تُسجَّل النتيجة بعد.'));
+      return;
+    }
+    p = node('p', 'cap brief');
+    p.appendChild(node('span', '', res ? 'النتيجة النهائية' : 'تجربة على نتيجة'));
+    sc = node('span', 'sc');
+    scoreInto(sc, r.h, r.a);
+    p.appendChild(sc);
+    if (r.pk) p.appendChild(node('span', '', '(بضربات الجزاء: ' + (r.pk === 'h' ? m.home : m.away) + ')'));
+    box.appendChild(p);
+    if (m.exact) box.appendChild(node('p', 'cap', 'أصحاب التوقع الصحيح: ' + m.exact.length));
+  }
+
+  /* بطاقة ماتش: رأسها يُضغط فتُفتح أو تُغلق، وتفاصيلها تُبنى وهي مفتوحة فقط */
   function adminCard(m, i) {
     var card = node('article', 'acard'), res = m.result || null;
-    var shut = isShut(m);
-    card.appendChild(node('p', 'tab-k', 'الماتش ' + (ORD[i] || (i + 1))));
-    card.appendChild(node('h2', '', m.home + ' × ' + m.away));
-    card.appendChild(node('p', 'cap', m.total ? 'عدد التوقعات: ' + m.total : 'لا توجد توقعات لهذا الماتش.'));
+    var shut = isShut(m), wide = adminWide('m:' + m.id), label = 'الماتش ' + (ORD[i] || (i + 1));
+    var head = node('div', 'ahead'), box = node('div', 'ahead-t'), tog;
+    box.appendChild(node('p', 'tab-k', label));
+    box.appendChild(node('h2', '', m.home + ' × ' + m.away));
+    box.appendChild(node('p', 'cap', m.total ? 'عدد التوقعات: ' + m.total : 'لا توجد توقعات لهذا الماتش.'));
+    head.appendChild(box);
+    card.appendChild(head);
     if (m.status === 'setup') {
       card.appendChild(node('p', 'quiet', 'إعدادات هذا الماتش غير مكتملة في الشيت.'));
+      return card;
+    }
+    head.setAttribute('data-act', 'fold');             // الرأس كله يفتح ويغلق، والزر لمن يتنقل بلوحة المفاتيح أو بقارئ الشاشة
+    head.setAttribute('data-id', m.id);
+    tog = actButton('afold', 'fold', m.id);
+    tog.setAttribute('aria-expanded', wide ? 'true' : 'false');
+    tog.setAttribute('aria-label', (wide ? 'إغلاق ' : 'فتح ') + label + ': ' + m.home + ' × ' + m.away);
+    tog.appendChild(lineIcon('M3.5 6l4.5 4.5L12.5 6'));
+    head.appendChild(tog);
+    if (!wide) {
+      adminBrief(box, m, shut, res);
       return card;
     }
     if (!shut) {
@@ -1859,6 +2001,219 @@ button,input{font:inherit;color:inherit}
     return card;
   }
 
+  /* من توقّع نتيجة كل ماتشات اليوم صحيحة (ويُعرف برقم موبايله): بعد تسجيل النتائج، أو على نتائج مجرَّبة */
+  function adminAllCard() {
+    var d = A.data, n = d.matches.length;
+    if (n < 2) return null;
+    var card = node('article', 'acard a-all'), both = n === 2 ? 'الماتشين' : 'كل الماتشات', list = Array.isArray(d.all) ? d.all : null;
+    card.appendChild(node('p', 'tab-k', n === 2 ? 'الماتشان معًا' : 'كل الماتشات معًا'));
+    card.appendChild(node('h2', '', 'من توقّع نتيجة ' + both + ' صحيحة'));
+    if (!list) {
+      var open = d.matches.some(function (m) { return m.status !== 'setup' && !m.result && !isShut(m); });
+      card.appendChild(node('p', 'quiet', 'تظهر الأسماء هنا بعد تسجيل نتيجة ' + both + (open ? '، أو بتجربة نتيجة لكل ماتش من أعلى.' : '.')));
+      return card;
+    }
+    if (d.allTrial) card.appendChild(node('p', 'trial', 'تجربة على النتائج المجرَّبة أعلاه: لم تُحفظ، ولا تظهر للجمهور.'));
+    card.appendChild(node('h3', '', 'أصحاب التوقع الصحيح في ' + both + ' (' + list.length + ')'));
+    var away = list.filter(function (e) { return !!e[7]; }).length;
+    if (away) card.appendChild(node('p', 'cap', (away === list.length ? 'كلهم ' : 'منهم ' + away + ' ') + 'لهم توقع ' + outLabel(d.radius) + '.'));
+    card.appendChild(list.length ? adminList(list, false) : node('p', 'quiet', 'لم يتوقع أحد نتيجة ' + both + ' صحيحة.'));
+    if (list.length) card.appendChild(node('p', 'cap', 'يُحتسب من سجّل توقعاته بنفس رقم الموبايل، بترتيب اكتمالها.'));
+    return card;
+  }
+
+  /* ── ملف Excel (xlsx) يُبنى في الصفحة نفسها: حزمة zip بلا ضغط، فيها ورقة XML ── */
+  function bytesOf(text) {
+    if (window.TextEncoder) return new TextEncoder().encode(text);
+    var bin = unescape(encodeURIComponent(text)), out = new Uint8Array(bin.length), i;
+    for (i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  var CRC = null;
+  function crc32(bytes) {
+    var n, k, c, crc = -1;
+    if (!CRC) {
+      CRC = [];
+      for (n = 0; n < 256; n++) {
+        c = n;
+        for (k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        CRC[n] = c;
+      }
+    }
+    for (n = 0; n < bytes.length; n++) crc = CRC[(crc ^ bytes[n]) & 255] ^ (crc >>> 8);
+    return (crc ^ -1) >>> 0;
+  }
+  /* files: [[الاسم، النص]]. كل ملف يُخزَّن كما هو، ثم فهرس الحزمة */
+  function zipStore(files, type) {
+    var chunks = [], dir = [], at = 0, dirSize = 0;
+    function le(n, size) {
+      var out = [], i;
+      for (i = 0; i < size; i++) out.push((n >>> (8 * i)) & 255);
+      return out;
+    }
+    files.forEach(function (f) {
+      var name = bytesOf(f[0]), data = bytesOf(f[1]);
+      var common = [].concat(le(20, 2), le(0x0800, 2), le(0, 2), le(0, 2), le(0x21, 2), le(crc32(data), 4), le(data.length, 4), le(data.length, 4), le(name.length, 2), le(0, 2));
+      chunks.push(new Uint8Array([0x50, 0x4B, 3, 4].concat(common)), name, data);
+      dir.push(new Uint8Array([0x50, 0x4B, 1, 2].concat(le(20, 2), common, le(0, 2), le(0, 2), le(0, 2), le(0, 4), le(at, 4))), name);
+      dirSize += 46 + name.length;
+      at += 30 + name.length + data.length;
+    });
+    chunks = chunks.concat(dir);
+    chunks.push(new Uint8Array([0x50, 0x4B, 5, 6].concat(le(0, 2), le(0, 2), le(files.length, 2), le(files.length, 2), le(dirSize, 4), le(at, 4), le(0, 2))));
+    return new Blob(chunks, { type: type });
+  }
+  function xmlText(v) {
+    var text = String(v == null ? '' : v), out = '', i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text.charCodeAt(i);
+      if (c === 38) out += '&amp;';
+      else if (c === 60) out += '&lt;';
+      else if (c === 62) out += '&gt;';
+      else if (c === 34) out += '&quot;';
+      else if (c >= 32 ? c < 0xFFFE : (c === 9 || c === 10 || c === 13)) out += text.charAt(i);
+    }
+    return out;
+  }
+  /* ورقة واحدة من اليمين إلى اليسار: صف عناوين ثابت وعليه فلتر، ثم الصفوف. الرقم يُكتب رقمًا والنص نصًّا (فلا يسقط صفر من أول رقم الموبايل) */
+  function xlsxOf(sheet, head, widths, rows) {
+    var XML = '<' + '?xml version="1.0" encoding="UTF-8" standalone="yes"?' + '>', MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+      REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships', PKG = 'http://schemas.openxmlformats.org/package/2006/';
+    function line(cells, r, style) {
+      var out = '<row r="' + r + '">';
+      cells.forEach(function (v, c) {
+        var at = ' r="' + String.fromCharCode(65 + c) + r + '"' + (style ? ' s="' + style + '"' : '');
+        if (v === '' || v == null) return;
+        out += (typeof v === 'number' && isFinite(v)) ? '<c' + at + '><v>' + v + '</v></c>' : '<c' + at + ' t="inlineStr"><is><t>' + xmlText(v) + '</t></is></c>';
+      });
+      return out + '</row>';
+    }
+    var last = String.fromCharCode(64 + head.length) + (rows.length + 1);
+    var data = line(head, 1, 1) + rows.map(function (cells, i) { return line(cells, i + 2, 0); }).join('');
+    var cols = widths.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('');
+    return zipStore([
+      ['[Content_Types].xml', XML + '<Types xmlns="' + PKG + 'content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+      ['_rels/.rels', XML + '<Relationships xmlns="' + PKG + 'relationships"><Relationship Id="rId1" Type="' + REL + '/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+      ['xl/workbook.xml', XML + '<workbook xmlns="' + MAIN + '" xmlns:r="' + REL + '"><bookViews><workbookView/></bookViews><sheets><sheet name="' + xmlText(sheet) + '" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+      ['xl/_rels/workbook.xml.rels', XML + '<Relationships xmlns="' + PKG + 'relationships"><Relationship Id="rId1" Type="' + REL + '/worksheet" Target="worksheets/sheet1.xml"/>' +
+        '<Relationship Id="rId2" Type="' + REL + '/styles" Target="styles.xml"/></Relationships>'],
+      ['xl/styles.xml', XML + '<styleSheet xmlns="' + MAIN + '"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+        '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF0C14B"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+      ['xl/worksheets/sheet1.xml', XML + '<worksheet xmlns="' + MAIN + '"><dimension ref="A1:' + last + '"/><sheetViews><sheetView rightToLeft="1" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+        '<cols>' + cols + '</cols><sheetData>' + data + '</sheetData><autoFilter ref="A1:' + last + '"/></worksheet>']
+    ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  }
+  function saveBlob(blob, name) {
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.hidden = true;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 4000);
+  }
+  /* التاريخ والوقت بتوقيت مصر: 2026-10-04 16:30:00 */
+  function fmtStamp(ms) {
+    try {
+      var p = {};
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+      return p.year + '-' + p.month + '-' + p.day + ' ' + p.hour + ':' + p.minute + ':' + p.second;
+    } catch (e) {
+      return new Date(ms).toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+    }
+  }
+
+  function adminHasPeople() {
+    return !!A.data && A.data.matches.every(function (m) { return Array.isArray(m.people); });
+  }
+
+  /* ينزّل كل المشاركين ببياناتهم ملف Excel: صف لكل توقع، بترتيب الماتشات ثم ترتيب التسجيل */
+  function adminExcel() {
+    var d = A.data, rows = [];
+    var head = ['الماتش', 'الترتيب', 'الاسم', 'رقم الموبايل', 'نتيجة الفريق الأول', 'نتيجة الفريق الثاني', 'الفائز بضربات الجزاء', 'وقت التسجيل (بتوقيت مصر)', 'النطاق', 'البعد عن الماتش (متر)',
+      'خط العرض', 'خط الطول', 'دقة الموقع (متر)', 'عدد توقعات الاسم في الماتش', 'النتيجة النهائية', 'توقع صحيح'];
+    d.matches.forEach(function (m) {
+      var res = m.result || null;
+      var final = res ? res.h + ' – ' + res.a + (res.pk ? ' (بضربات الجزاء: ' + (res.pk === 'h' ? m.home : m.away) + ')' : '') : '';
+      (m.people || []).forEach(function (e) {
+        rows.push([m.home + ' × ' + m.away, e[0], String(e[1] || ''), String(e[2] == null ? '' : e[2]), e[4], e[5], e[6] === 'h' ? m.home : (e[6] === 'a' ? m.away : ''), e[3] ? fmtStamp(e[3]) : '',
+          d.ranged ? (e[7] ? outLabel(d.radius) : inLabel(d.radius)) : '', e[12], e[9], e[10], e[11], e[8] > 1 ? e[8] : '', final, res ? (isRight(e[4], e[5], e[6] || '', res) ? 'نعم' : 'لا') : '']);
+      });
+    });
+    try {
+      saveBlob(xlsxOf('المشاركون', head, [30, 9, 28, 16, 18, 18, 22, 24, 24, 20, 14, 14, 16, 24, 26, 12], rows), 'participants-' + fmtStamp(Date.now() + S.offset).slice(0, 10) + '.xlsx');      // اسم بحروف لاتينية: بعض المتصفحات لا تحفظ اسمًا عربيًّا
+      adminNote('#people', true, 'تم تجهيز ملف Excel وفيه ' + rows.length + (rows.length > 10 ? ' توقعًا' : ' توقعات') + '. لو لم يبدأ التنزيل، افتح اللوحة من متصفح كروم أو سفاري.');
+    } catch (err) {
+      adminNote('#people', false, 'تعذّر تجهيز ملف Excel على هذا المتصفح.');
+    }
+  }
+
+  function adminPeople() {
+    if (A.showPeople) {
+      A.showPeople = false;
+      adminRender();
+      return;
+    }
+    A.showPeople = true;
+    adminNote('', false, '');
+    if (adminHasPeople()) {
+      adminRender();
+      return;
+    }
+    A.roster = true;
+    adminAsk({}, function (err) {
+      if (!err) return;
+      A.showPeople = false;
+      if (A.code) adminNote('#people', false, ADMIN_MSG[err] || 'تعذّر الاتصال. حاول مرة أخرى.');
+    });
+  }
+
+  /* الملف يُبنى من أحدث ما في الشيت: يُطلب أولًا ثم يُنزَّل */
+  function adminWantExcel() {
+    A.roster = true;
+    adminAsk({}, function (err) {
+      if (!err && adminHasPeople()) adminExcel();
+      else if (A.code) adminNote('#people', false, ADMIN_MSG[err] || 'تعذّر الاتصال ولم يُجهَّز الملف. حاول مرة أخرى.');
+    });
+  }
+
+  /* كل مشاركي ماتشات اليوم ببياناتهم: عرض في اللوحة، وتنزيل ملف Excel */
+  function adminPeopleCard() {
+    var d = A.data, total = 0, have = adminHasPeople();
+    d.matches.forEach(function (m) { total += m.total || 0; });
+    var card = node('article', 'acard a-people');
+    card.appendChild(node('p', 'tab-k', 'المشاركون'));
+    card.appendChild(node('h2', '', 'كل المشاركين ببياناتهم'));
+    card.appendChild(node('p', 'cap', total ? 'عدد التوقعات: ' + total + (d.matches.length > 1 ? ' في ' + (d.matches.length === 2 ? 'الماتشين' : 'كل الماتشات') : '') : 'لا توجد توقعات بعد.'));
+    if (!total) return card;
+    var bar = node('div', 'abtns'), show = actButton('abtn', 'people', '', A.showPeople && have ? 'إخفاء المشاركين' : 'عرض كل المشاركين'), xl = actButton('abtn', 'excel', '', 'تنزيل Excel');
+    show.disabled = xl.disabled = A.busy;
+    bar.appendChild(show);
+    bar.appendChild(xl);
+    card.appendChild(bar);
+    if (A.at === '#people' && A.note) card.appendChild(node('p', A.good ? 'note good' : 'note', A.note));
+    if (!A.showPeople || !have) return card;
+    d.matches.forEach(function (m, i) {             // عنوان كل ماتش يُضغط فتُفتح قائمته أو تُغلق
+      var wide = adminWide('p:' + m.id), h = node('h3', 'afh'), b = actButton('afrow', 'plist', m.id);
+      b.setAttribute('aria-expanded', wide ? 'true' : 'false');
+      b.appendChild(node('span', '', (d.matches.length > 1 ? 'الماتش ' + (ORD[i] || (i + 1)) + ': ' : '') + m.home + ' × ' + m.away + ' (' + m.people.length + ')'));
+      b.appendChild(lineIcon('M3.5 6l4.5 4.5L12.5 6'));
+      h.appendChild(b);
+      card.appendChild(h);
+      if (wide) card.appendChild(m.people.length ? adminList(m.people, true, m) : node('p', 'quiet', 'لا توجد توقعات لهذا الماتش.'));
+    });
+    return card;
+  }
+
   function adminRender() {
     var inside = !!(A.code && A.data);
     el.aGate.hidden = inside;
@@ -1872,6 +2227,9 @@ button,input{font:inherit;color:inherit}
     if (!inside) return;
     var frag = document.createDocumentFragment();
     A.data.matches.forEach(function (m, i) { frag.appendChild(adminCard(m, i)); });
+    var allCard = adminAllCard();
+    if (allCard) frag.appendChild(allCard);
+    frag.appendChild(adminPeopleCard());
     el.aCards.appendChild(frag);
   }
 
@@ -1889,16 +2247,34 @@ button,input{font:inherit;color:inherit}
     A.data = null;
     A.drafts = {};
     A.tries = {};
-    A.trial = null;
+    A.trials = {};
+    A.roster = false;
+    A.showPeople = false;
+    A.fold = {};
     adminNote('', false, '');
     adminRender();
   });
   el.aCards.addEventListener('click', function (e) {
     var b = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
-    if (!b || b.disabled || A.busy) return;
+    if (!b || b.disabled) return;
     var act = b.getAttribute('data-act'), id = b.getAttribute('data-id'), d = (b.getAttribute('data-kind') === 'trial' ? A.tries : A.drafts)[id];
+    if (act === 'fold' || act === 'plist') {            // فتح ماتش وإغلاقه لا ينتظران طلبًا جاريًا
+      var byButton = b.tagName === 'BUTTON';
+      adminFold((act === 'fold' ? 'm:' : 'p:') + id, id);
+      if (byButton) {                                   // اللوحة أُعيد رسمها: يبقى التركيز على الزر نفسه
+        Array.prototype.some.call(el.aCards.querySelectorAll('button[data-act="' + act + '"]'), function (x) {
+          if (x.getAttribute('data-id') !== id) return false;
+          x.focus();
+          return true;
+        });
+      }
+      return;
+    }
+    if (A.busy) return;
     if (act !== 'clear') A.armed = '';
-    if (act === 'save') adminSave(id);
+    if (act === 'people') adminPeople();
+    else if (act === 'excel') adminWantExcel();
+    else if (act === 'save') adminSave(id);
     else if (act === 'clear') adminClear(id);
     else if (act === 'try') adminTry(id);
     else if (act === 'untry') adminUntry(id);
